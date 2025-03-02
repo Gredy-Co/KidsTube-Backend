@@ -11,7 +11,7 @@ const { userPost } = require('./controllers/UserController');
 const app = express();
 
 // Conexión a MongoDB Atlas
-mongoose.connect('mongodb+srv://keirychas:Keivanessa05@cluster0.2g9bo.mongodb.net/KidsTube?retryWrites=true&w=majority&appName=Cluster0')
+mongoose.connect('mongodb+srv://greddy:123@cluster0.yx9nc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
   .then(() => {
     console.log('Conectado a MongoDB Atlas');
   })

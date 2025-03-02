@@ -9,33 +9,37 @@ const User = require("../models/UserModel");
 const userPost = async (req, res) => {
     try {
         // Destructure the request body
-        const { email, password, confirmPassword, phoneNumber, pin, firstName, lastName, country, dateOfBirth, state } = req.body;
+        const { email, password, phoneNumber, pin, firstName, lastName, country, dateOfBirth, status } = req.body;
+
+        console.log("Hola esto es", req.body);  // Verifica los datos que el servidor está recibiendo
 
         // Validate required fields
-        if (!email || !password || !confirmPassword || !phoneNumber || !pin || !firstName || !lastName || !country || !dateOfBirth || !state) {
+        if (!email || !password || !phoneNumber || !pin || !firstName || !lastName || !country || !dateOfBirth || !status) {
             return res.status(400).json({
-                error: "Todos los campos son obligatorios."
+                error: "All fields are required."
             });
         }
 
-        // Validate that passwords match
-        if (password !== confirmPassword) {
+        // Convertir la fecha de nacimiento a un objeto Date
+        const birthDate = new Date(dateOfBirth);
+
+        if (isNaN(birthDate.getTime())) {
             return res.status(400).json({
-                error: "Las contraseñas no coinciden."
+                error: "Invalid date of birth format."
             });
         }
 
         // Create a new user instance
         const user = new User({
             email,
-            password, // La contraseña se encriptará automáticamente gracias al middleware en el modelo
+            password, // The password will be automatically encrypted thanks to the middleware in the model
             phoneNumber,
             pin,
             firstName,
             lastName,
             country,
-            dateOfBirth,
-            state
+            dateOfBirth: birthDate,
+            status
         });
 
         // Save the user to the database
@@ -47,7 +51,7 @@ const userPost = async (req, res) => {
 
         // Return the created user with a 201 status code
         res.status(201).json({
-            message: "Usuario creado exitosamente",
+            message: "User created successfully",
             data: userResponse
         });
     } catch (err) {
@@ -56,21 +60,21 @@ const userPost = async (req, res) => {
         // Handle specific errors (e.g., validation errors)
         if (err.name === "ValidationError") {
             return res.status(422).json({
-                error: "Error de validación",
+                error: "Validation error",
                 details: err.message
             });
         }
 
         // Handle duplicate email error
         if (err.code === 11000) {
-            return res.status(400).json({
-                error: "El correo electrónico ya está registrado."
+            return res.status(409).json({
+                error: "The email is already registered."
             });
         }
 
         // Handle generic server errors
         res.status(500).json({
-            error: "Error interno del servidor"
+            error: "Internal Server Error"
         });
     }
 };

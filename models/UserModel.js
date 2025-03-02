@@ -2,57 +2,74 @@ const API_URL = "http://localhost:3000/api/user";
 
 const mongoose = require('mongoose');
 const Schema   = mongoose.Schema;
-const bcrypt = require('bcryptjs'); // Para encriptar la contraseña
+const bcrypt = require('bcryptjs'); // To encrypt the password
 
-// Definir el esquema del usuario
+// Define the user schema
 const userSchema = new Schema({
     email: {
         type: String,
         unique: true,
         trim: true,
-        lowercase: true
+        lowercase: true,
+        required: true 
     },
     password: {
-        type: String
+        type: String,
+        required: true
     },
     phoneNumber: {
-        type: String
+        type: String,
+        match: [/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number.']
     },
     pin: {
-        type: String
+        type: String,
+        match: [/^\d{4}$/, 'The PIN must contain 4 digits.']
     },
     firstName: {
         type: String,
-        trim: true
+        trim: true,
+        required: true
     },
     lastName: {
         type: String,
-        trim: true
+        trim: true,
+        required: true
     },
     country: {
         type: String,
-        trim: true
+        trim: true,
     },
     dateOfBirth: {
-        type: Date
+        type: Date,
+        required: true,
+        validate: {
+            validator: function (value) {
+                return value && value instanceof Date && value < new Date(); 
+            },
+            message: 'The date of birth must be valid.'
+        }
     },
-    state: {
+    status: {
         type: String,
-        trim: true
+        trim: true,
+        enum: ['active', 'inactive'],
+        default: 'active'
     }
 });
 
-// Middleware para encriptar la contraseña antes de guardar el usuario
+// Middleware to encrypt the password before saving the user
 userSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, 10); // Encriptar la contraseña
+        this.password = await bcrypt.hash(this.password, 10); // Encrypt the password
     }
     next();
 });
 
-// Método para comparar contraseñas
+// Method to compare passwords
 userSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model('user', userSchema);
+
+
