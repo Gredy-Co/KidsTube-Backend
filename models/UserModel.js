@@ -1,8 +1,8 @@
-const API_URL = "http://localhost:3000/api/user"; 
+const API_URL  = "http://localhost:3000/api/user"; 
 
 const mongoose = require('mongoose');
 const Schema   = mongoose.Schema;
-const bcrypt = require('bcryptjs'); // To encrypt the password
+const bcrypt   = require('bcryptjs'); // To encrypt the password
 
 // Define the user schema
 const userSchema = new Schema({

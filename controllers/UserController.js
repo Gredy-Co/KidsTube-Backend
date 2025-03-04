@@ -1,4 +1,6 @@
 const User = require("../models/UserModel");
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 /**
  * Creates a user
@@ -10,8 +12,6 @@ const userPost = async (req, res) => {
     try {
         // Destructure the request body
         const { email, password, phoneNumber, pin, firstName, lastName, country, dateOfBirth, status } = req.body;
-
-        console.log("Hola esto es", req.body);  // Verifica los datos que el servidor está recibiendo
 
         // Validate required fields
         if (!email || !password || !phoneNumber || !pin || !firstName || !lastName || !country || !dateOfBirth || !status) {
@@ -51,7 +51,6 @@ const userPost = async (req, res) => {
 
         // Return the created user with a 201 status code
         res.status(201).json({
-            message: "User created successfully",
             data: userResponse
         });
     } catch (err) {
@@ -79,6 +78,31 @@ const userPost = async (req, res) => {
     }
 };
 
+/**
+ * Logs in a user
+ */
+const userLogin = async (req, res) => {
+    const { email, password } = req.body;
+    console.log("Email recibido:", email);
+    console.log("Contraseña recibida:", password);
+  
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required.' });
+    }
+  
+    if (email === 'keirychas@example.com' && password === 'Keivanessa05') {
+      return res.status(200).json({ message: 'Login successful' });
+    } else {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+  };
+  
+  
+  
+
+
+
 module.exports = {
-    userPost
+    userPost,
+    userLogin
 };

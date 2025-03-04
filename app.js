@@ -1,17 +1,14 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+const express    = require('express');
+const mongoose   = require('mongoose');
+const cors       = require('cors');
 const bodyParser = require('body-parser');
 
-// Importar controladores
-const { videoPost, videoGet, videoPut } = require('./controllers/VideoController');
-const { userPost } = require('./controllers/UserController');
+const { videoPost, videoGet, videoPut, videoDelete } = require('./controllers/VideoController');
+const { userPost, userLogin } = require('./controllers/UserController');
 
-// Crear la aplicación Express
 const app = express();
 
-// Conexión a MongoDB Atlas
-mongoose.connect('mongodb+srv://greddy:123@cluster0.yx9nc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+mongoose.connect('mongodb+srv://keirychas:Keivanessa05@cluster0.2g9bo.mongodb.net/KidsTube?retryWrites=true&w=majority&appName=Cluster0')
   .then(() => {
     console.log('Conectado a MongoDB Atlas');
   })
@@ -19,27 +16,28 @@ mongoose.connect('mongodb+srv://greddy:123@cluster0.yx9nc.mongodb.net/?retryWrit
     console.log('Error de conexión a MongoDB:', err);
   });
 
-// Middleware para parsear el cuerpo de las solicitudes
-app.use(bodyParser.json()); // body-parser para versiones antiguas de Express
-app.use(express.json()); // express.json() es el método recomendado en Express 4.16+
+app.use(bodyParser.json()); 
+app.use(express.json()); 
 
-// Configurar CORS
 app.use(cors({
-  origin: '*', // Permitir solicitudes desde cualquier origen
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
-  allowedHeaders: ['Content-Type', 'Authorization'] // Cabeceras permitidas
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
 
-// Rutas para videos
+// Video Routes 
 app.post('/api/video', videoPost);
 app.get('/api/video/', videoGet);
 app.put('/api/video/:id', videoPut);
+app.delete('/api/video/:id', videoDelete);
 
-// Rutas para usuarios
-app.post('/api/user', userPost); // Usa esta ruta o la de abajo, pero no ambas
+// User Routes
+app.post('/api/user', userPost); 
+app.post('/api/user/login', userLogin ); 
+
 // app.post('/api/users', userPost); // Esta ruta está duplicada
 
-// Iniciar el servidor
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`);

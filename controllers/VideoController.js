@@ -118,10 +118,37 @@ const videoPut = async (req, res) => {
     }
   };
 
+/**
+ * Delete video by _id
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+const videoDelete = async (req, res) => {
+    try {
+        const { id } = req.params;  
 
+        if (!id) {
+            return res.status(400).json({ error: "You must provide a valid ID." });
+        }
+
+        const deletedVideo = await Video.findByIdAndDelete(id);
+
+        if (!deletedVideo) {
+            return res.status(404).json({ error: "Video not found." });
+        }
+
+        // Return the deleted object instead of a message
+        res.status(200).json(deletedVideo);
+    } catch (error) {
+        console.error("Error deleting the video:", error);
+        res.status(500).json({ error: "An error occurred while deleting the video." });
+    }
+};
   
 module.exports = {
     videoPost,
     videoGet,
-    videoPut
+    videoPut,
+    videoDelete
 };

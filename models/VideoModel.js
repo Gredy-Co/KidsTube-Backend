@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api/video"; 
+const API_URL  = "http://localhost:3000/api/video"; 
 
 const mongoose = require('mongoose');
 const Schema   = mongoose.Schema;
