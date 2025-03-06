@@ -1,3 +1,4 @@
+                   require('dotenv').config();
 const express    = require('express');
 const mongoose   = require('mongoose');
 const cors       = require('cors');
@@ -8,13 +9,17 @@ const { userPost, userLogin } = require('./controllers/UserController');
 
 const app = express();
 
-mongoose.connect('mongodb+srv://keirychas:Keivanessa05@cluster0.2g9bo.mongodb.net/KidsTube?retryWrites=true&w=majority&appName=Cluster0')
-  .then(() => {
-    console.log('Conectado a MongoDB Atlas');
-  })
-  .catch(err => {
-    console.log('Error de conexión a MongoDB:', err);
-  });
+const mongoData = process.env.DATABASE_URL;
+mongoose.connect(mongoData);
+const database = mongoose.connection;
+
+database.on('error', (error) => {
+    console.log(error)
+})
+
+database.once('connected', () => {
+    console.log('Database Connected')
+})
 
 app.use(bodyParser.json()); 
 app.use(express.json()); 
