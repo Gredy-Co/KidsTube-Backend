@@ -30,13 +30,11 @@ const videoPost = async (req, res) => {
 
         // Return the created video with a 201 status code
         res.status(201).json({
-            message: "Video created successfully",
             data: savedVideo
         });
     } catch (err) {
         console.error("Error while saving the video:", err);
 
-        // Handle specific errors (e.g., validation errors)
         if (err.name === "ValidationError") {
             return res.status(422).json({
                 error: "Validation failed",
@@ -44,7 +42,6 @@ const videoPost = async (req, res) => {
             });
         }
 
-        // Handle generic server errors
         res.status(500).json({
             error: "Internal server error"
         });
@@ -61,14 +58,12 @@ const videoPost = async (req, res) => {
 const videoGet = async (req, res) => {
     try {
         if (req.query && req.query.id) {
-            // Fetch a specific video by ID
             const video = await Video.findById(req.query.id);
             if (!video) {
                 return res.status(404).json({ error: "Video not found" });
             }
             return res.status(200).json(video);
         } else {
-            // Fetch all videos
             const videos = await Video.find();
             return res.status(200).json(videos);
         }
@@ -102,7 +97,7 @@ const videoPut = async (req, res) => {
         const video = await Video.findById(id);
         
         if (!video) {
-            return res.status(404).json({ error: "Curso no encontrado." });
+            return res.status(404).json({ error: "Video not found" });
         }
   
         video.name        = name;
@@ -111,7 +106,7 @@ const videoPut = async (req, res) => {
   
         await video.save();  
   
-        return res.json({video });
+        return res.json(video);
     } catch (error) {
         console.error('Error while updating the course:', error);
         return res.status(500).json({ error: "Hubo un error al actualizar el curso." });
@@ -138,7 +133,6 @@ const videoDelete = async (req, res) => {
             return res.status(404).json({ error: "Video not found." });
         }
 
-        // Return the deleted object instead of a message
         res.status(200).json(deletedVideo);
     } catch (error) {
         console.error("Error deleting the video:", error);

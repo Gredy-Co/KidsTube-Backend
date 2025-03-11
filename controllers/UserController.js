@@ -84,29 +84,46 @@ const userPost = async (req, res) => {
 const userLogin = async (req, res) => {
     const { email, password } = req.body;
 
+    // Validar que se proporcionen email y contraseña
     if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required.' });
     }
 
     try {
-        // Search user in the database
+        // Buscar al usuario en la base de datos
         const user = await User.findOne({ email });
 
+        // Verificar si el usuario existe
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Compare passwords
+        // Comparar la contraseña proporcionada con la almacenada
         const isMatch = await bcrypt.compare(password, user.password);
 
+        // Verificar si la contraseña es correcta
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Generate a JWT token
-        const token = jwt.sign({ id: user._id, email: user.email }, 'tu_clave_secreta', { expiresIn: '1h' });
+        // Generar un token JWT
+        const token = jwt.sign(
+            { id: user._id, email: user.email }, // Datos que quieres incluir en el token
+            'tu_clave_secreta', // Clave secreta (debe ser la misma que usas para verificar el token)
+            { expiresIn: '1h' } // El token expira en 1 hora
+        );
 
-        return res.status(200).json(user);
+        // Devolver el token y los datos del usuario
+        return res.status(200).json({
+            token, // Token JWT
+            user: {
+                _id: user._id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                // Incluye otros datos que quieras devolver
+            },
+        });
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: 'Internal Server Error' });
