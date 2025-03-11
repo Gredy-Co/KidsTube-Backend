@@ -121,6 +121,7 @@ const userLogin = async (req, res) => {
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName,
+                pin: user.pin,
                 // Incluye otros datos que quieras devolver
             },
         });
