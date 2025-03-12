@@ -1,6 +1,5 @@
 const Profile = require("../models/ProfileModel");
 
-// Obtener un perfil con la información completa del usuario
 const profileGet = async (req, res) => {
     try {
         console.log("Usuario autenticado:", req.user); // Verificar que req.user esté definido
@@ -136,15 +135,13 @@ const profilePut = async (req, res) => {
 
 const profileDelete = async (req, res) => {
     try {
-        console.log("Usuario autenticado:", req.user); // Verificar que req.user esté definido
+        console.log("Usuario autenticado:", req.user); 
 
         if (!req.user || !req.user.id) {
             return res.status(401).json({ error: "No autorizado" });
         }
 
-        const { id } = req.params; // Obtener el ID del perfil a eliminar
-
-        // Buscar y eliminar el perfil solo si pertenece al usuario autenticado
+        const { id } = req.params; 
         const profile = await Profile.findOneAndDelete({ _id: id, createdBy: req.user.id });
 
         if (!profile) {
