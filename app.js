@@ -5,9 +5,11 @@ const cors       = require('cors');
 const bodyParser = require('body-parser');
 const authenticate = require('./middleware/auth'); 
 
-const { videoPost, videoGet, videoPut, videoDelete } = require('./controllers/VideoController');
 const { userPost, userLogin } = require('./controllers/UserController');
-const { profilePost, profileGet, profilePut,profileDelete } = require('./controllers/ProfileController');
+const { profilePost, profileGet, profilePut, profileDelete } = require('./controllers/ProfileController');
+const { playlistPost, playlistGetAll, playlistGetById, playlistPut, playlistDelete } = require('./controllers/PlaylistController');
+const { videoPost, videoGet, videoGetById, videoPut, videoDelete } = require('./controllers/VideoController');
+
 
 const app = express();
 
@@ -34,12 +36,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
 
-// Video Routes 
-app.post('/api/video', videoPost);
-app.get('/api/video/', videoGet);
-app.put('/api/video/:id', videoPut);
-app.delete('/api/video/:id', videoDelete);
-
 // User Routes
 app.post('/api/user', userPost); 
 app.post('/api/user/login', userLogin ); 
@@ -48,7 +44,21 @@ app.post('/api/user/login', userLogin );
 app.post('/api/profile' ,authenticate, profilePost); 
 app.put('/api/profile/:id' ,authenticate, profilePut); 
 app.get('/api/profile/' ,authenticate, profileGet); 
-app.delete('/api/profile/:id' ,authenticate, profileDelete); 
+app.delete('/api/profile/:id' ,authenticate, profileDelete);
+
+// Playlist Routes
+app.post('/api/playlist' , playlistPost); 
+app.put('/api/playlist/:id' , playlistPut); 
+app.get('/api/playlists' , playlistGetAll);
+app.get('/api/playlist/:id', playlistGetById);
+app.delete('/api/playlist/:id' , playlistDelete); 
+
+// Video Routes
+app.post('/api/video' , videoPost); 
+app.put('/api/video/:id' , videoPut); 
+app.get('/api/video' , videoGet);
+app.get('/api/video/:id' , videoGetById);
+app.delete('/api/video/:id' , videoDelete);
 
 // app.post('/api/users', userPost); // Esta ruta está duplicada
 

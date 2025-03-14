@@ -79,6 +79,28 @@ const videoGet = async (req, res) => {
 };
 
 
+const videoGetById = async (req, res) => {
+    try {
+        const { id } = req.params; // Obtener el ID desde los parámetros de la ruta
+        const video = await Video.findById(id);
+
+        if (!video) {
+            return res.status(404).json({ error: "Video not found" });
+        }
+
+        res.status(200).json(video);
+    } catch (err) {
+        console.error("Error while fetching video by ID:", err);
+
+        if (err.name === "CastError") {
+            return res.status(400).json({ error: "Invalid video ID format" });
+        }
+
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+
 /**
  * Edit video by _id
  *
@@ -86,32 +108,41 @@ const videoGet = async (req, res) => {
  * @param {*} res
  */
 const videoPut = async (req, res) => {
-    const { id } = req.params; 
-    const { name, url, description} = req.body; 
-  
-    if (!name || !url || !description) {
-        return res.status(400).json({ error: "Todos los campos son requeridos." });
-    }
-  
+    const { id } = req.params;
+    const updateData = req.body;
+
     try {
+        // Verificar si el video existe
         const video = await Video.findById(id);
-        
         if (!video) {
             return res.status(404).json({ error: "Video not found" });
         }
-  
-        video.name        = name;
-        video.url         = url;
-        video.description = description;
-  
-        await video.save();  
-  
-        return res.json(video);
+
+        // Actualizar solo los campos proporcionados en el cuerpo de la solicitud
+        Object.keys(updateData).forEach((key) => {
+            if (updateData[key] !== undefined) {
+                video[key] = updateData[key];
+            }
+        });
+
+        // Guardar los cambios en la base de datos
+        const updatedVideo = await video.save();
+
+        // Devolver el video actualizado
+        res.status(200).json(updatedVideo);
     } catch (error) {
-        console.error('Error while updating the course:', error);
-        return res.status(500).json({ error: "Hubo un error al actualizar el curso." });
+        console.error("Error while updating the video:", error);
+
+        if (error.name === "ValidationError") {
+            return res.status(422).json({
+                error: "Validation failed",
+                details: error.message
+            });
+        }
+
+        return res.status(500).json({ error: "Internal server error" });
     }
-  };
+};
 
 /**
  * Delete video by _id
@@ -143,6 +174,7 @@ const videoDelete = async (req, res) => {
 module.exports = {
     videoPost,
     videoGet,
+    videoGetById,
     videoPut,
     videoDelete
 };
