@@ -16,5 +16,33 @@ const authMiddleware = (req, res, next) => {
     res.status(401).json({ message: 'Token is not valid' });
   }
 };
+const authorizeRole = (allowedRoles) => {
+  return async (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1]; 
+    const profileId = req.params.profileId || req.body.profileId; 
 
-module.exports = authMiddleware;
+    if (!token || !profileId) {
+      return res.status(401).json({ message: 'Token o ID de perfil no proporcionados.' });
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const parentUserId = decoded.id;
+
+      const profile = await Profile.findOne({ _id: profileId, userId: parentUserId });
+      if (!profile) {
+        return res.status(403).json({ message: 'Acceso denegado. El perfil no pertenece al usuario.' });
+      }
+
+      if (!allowedRoles.includes(profile.role)) {
+        return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para esta acción.' });
+      }
+
+      req.profile = profile;
+      next();
+    } catch (err) {
+      return res.status(403).json({ message: 'Token inválido o expirado.' });
+    }
+  };
+};
+module.exports = authMiddleware, authorizeRole;

@@ -54,7 +54,9 @@ const userSchema = new Schema({
         trim: true,
         enum: ['active', 'inactive'],
         default: 'active'
-    }
+    },
+    role: { type: String, enum: ['parent', 'profile'], default: 'parent' }
+
 });
 
 // Middleware to encrypt the password before saving the user

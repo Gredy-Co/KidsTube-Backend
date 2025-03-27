@@ -103,9 +103,7 @@ const userLogin = async (req, res) => {
 
         const token = jwt.sign(
             { id: user._id, email: user.email, pin: user.pin }, 
-            'tu_clave_secreta', 
-            { expiresIn: '1h' } 
-        );
+            'tu_clave_secreta'        );
 
         return res.status(200).json({
             token, 

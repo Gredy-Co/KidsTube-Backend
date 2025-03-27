@@ -58,7 +58,7 @@ const playlistGetAll = async (req, res) => {
                 .populate('videos'); 
 
             if (!playlist) {
-                return res.status(404).json({ error: "Playlist not found" });
+                return res.status(404).json();
             }
             return res.status(200).json(playlist);
         } else {
@@ -99,7 +99,7 @@ const playlistPut = async (req, res) => {
         const playlist = await Playlist.findById(id);
         
         if (!playlist) {
-            return res.status(404).json({ error: "Playlist not found" });
+            return res.status(404).json();
         }
   
         playlist.name = name;
@@ -126,13 +126,13 @@ const playlistDelete = async (req, res) => {
         const { id } = req.params;
 
         if (!id) {
-            return res.status(400).json({ error: "You must provide a valid ID." });
+            return res.status(400).json();
         }
 
         const deletedPlaylist = await Playlist.findByIdAndDelete(id);
 
         if (!deletedPlaylist) {
-            return res.status(404).json({ error: "Playlist not found." });
+            return res.status(404).json();
         }
 
         res.status(200).json(deletedPlaylist);
@@ -146,9 +146,14 @@ const playlistDelete = async (req, res) => {
 const playlistGetById = async (req, res) => {
     try {
         const { id } = req.params;
-        const playlist = await Playlist.findById(id).populate('associatedProfiles').populate('videos');
+        console.log("id:", req.params); 
+
+        
+        const playlist = await Playlist.findById(id).populate('videos');
+        console.log("playlist:", playlist); 
+
         if (!playlist) {
-            return res.status(404).json({ error: "Playlist not found" });
+            return res.status(404).json();
         }
         return res.status(200).json(playlist);
     } catch (err) {
@@ -161,7 +166,6 @@ const playlistGetByProfileId = async (req, res) => {
     try {
       const { profileId } = req.params;
   
-      // Buscar playlists asociadas al perfil
       const playlists = await Playlist.find({ associatedProfiles: profileId })
         .populate('associatedProfiles')
         .populate('videos');
