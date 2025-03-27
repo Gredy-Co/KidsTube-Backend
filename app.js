@@ -5,9 +5,9 @@ const cors       = require('cors');
 const bodyParser = require('body-parser');
 const authenticate = require('./middleware/auth'); 
 
-const { userPost, userLogin } = require('./controllers/UserController');
-const { profilePost, profileGet, profilePut, profileDelete } = require('./controllers/ProfileController');
-const { playlistPost, playlistGetAll, playlistGetById, playlistPut, playlistDelete } = require('./controllers/PlaylistController');
+const { userPost, userLogin, validateUserPin } = require('./controllers/UserController');
+const { profilePost, profileGet, profilePut, profileDelete, validatePin } = require('./controllers/ProfileController');
+const { playlistPost, playlistGetAll, playlistGetById, playlistPut, playlistDelete,playlistGetByProfileId } = require('./controllers/PlaylistController');
 const { videoPost, videoGet, videoGetById, videoPut, videoDelete } = require('./controllers/VideoController');
 
 
@@ -39,18 +39,21 @@ app.use(cors({
 // User Routes
 app.post('/api/user', userPost); 
 app.post('/api/user/login', userLogin ); 
+app.post('/api/user/validateUserPin', authenticate, validateUserPin);
 
 // Profiles Routes
 app.post('/api/profile' ,authenticate, profilePost); 
 app.put('/api/profile/:id' ,authenticate, profilePut); 
 app.get('/api/profile/' ,authenticate, profileGet); 
 app.delete('/api/profile/:id' ,authenticate, profileDelete);
+app.post('/api/profile/validatePin/:profileId', authenticate, validatePin);
 
 // Playlist Routes
 app.post('/api/playlist' , playlistPost); 
 app.put('/api/playlist/:id' , playlistPut); 
 app.get('/api/playlists' , playlistGetAll);
 app.get('/api/playlist/:id', playlistGetById);
+app.get('/api/playlist/profile/:profileId', playlistGetByProfileId);
 app.delete('/api/playlist/:id' , playlistDelete); 
 
 // Video Routes

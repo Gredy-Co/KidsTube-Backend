@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const playlistSchema = new Schema({
     name: { type: String, required: true },
     associatedProfiles: [{ type: Schema.Types.ObjectId, ref: 'Profile', required: true }],
-    videos: [{ type: Schema.Types.ObjectId, ref: 'Video', required: true }] // Videos asociados
+    videos: [{ type: Schema.Types.ObjectId, ref: 'Video', required: true }] 
 });
 
 

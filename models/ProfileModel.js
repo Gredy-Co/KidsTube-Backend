@@ -10,8 +10,7 @@ const ProfileSchema = new mongoose.Schema({
   pin: { 
     type: String, 
     required: true, 
-    minlength: 6, 
-    maxlength: 6 
+    minlength: 4
   },
   avatar: { 
     type: String, 

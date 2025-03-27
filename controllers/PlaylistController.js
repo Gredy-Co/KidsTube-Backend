@@ -54,8 +54,8 @@ const playlistGetAll = async (req, res) => {
     try {
         if (req.query && req.query.id) {
             const playlist = await Playlist.findById(req.query.id)
-                .populate('associatedProfiles') // Asegúrate de que el modelo 'Profile' esté registrado
-                .populate('videos'); // Asegúrate de que el modelo 'Video' esté registrado
+                .populate('associatedProfiles') 
+                .populate('videos'); 
 
             if (!playlist) {
                 return res.status(404).json({ error: "Playlist not found" });
@@ -78,6 +78,8 @@ const playlistGetAll = async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 };
+
+
 
 /**
  * Edit playlist by _id
@@ -155,10 +157,31 @@ const playlistGetById = async (req, res) => {
     }
 };
 
+const playlistGetByProfileId = async (req, res) => {
+    try {
+      const { profileId } = req.params;
+  
+      // Buscar playlists asociadas al perfil
+      const playlists = await Playlist.find({ associatedProfiles: profileId })
+        .populate('associatedProfiles')
+        .populate('videos');
+  
+      if (!playlists || playlists.length === 0) {
+        return res.status(404).json({ error: "No playlists found for this profile" });
+      }
+  
+      return res.status(200).json(playlists);
+    } catch (err) {
+      console.error("Error while fetching playlists by profile ID:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
+  
 module.exports = {
     playlistPost,
     playlistGetAll,
     playlistGetById,
     playlistPut,
-    playlistDelete
+    playlistDelete,
+    playlistGetByProfileId
 };

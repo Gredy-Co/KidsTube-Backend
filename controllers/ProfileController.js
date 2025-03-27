@@ -2,13 +2,11 @@ const Profile = require("../models/ProfileModel");
 
 const profileGet = async (req, res) => {
     try {
-        console.log("Usuario autenticado:", req.user); // Verificar que req.user esté definido
-
+        console.log("Usuario autenticado:", req.user); 
         if (!req.user || !req.user.id) {
             return res.status(401).json({ error: "No autorizado" });
         }
 
-        // Buscar todos los perfiles creados por el usuario autenticado
         const profiles = await Profile.find({ createdBy: req.user.id });
 
         if (profiles.length === 0) {
@@ -27,7 +25,7 @@ const profileGet = async (req, res) => {
 // Create a profile
 const profilePost = async (req, res) => {
     try {
-        console.log("Usuario autenticado:", req.user); // Verificar que req.user esté definido
+        console.log("Usuario autenticado:", req.user); 
 
         const { fullName, pin, avatar } = req.body;
 
@@ -37,11 +35,7 @@ const profilePost = async (req, res) => {
             });
         }
 
-        if (pin.length !== 6 || !/^\d+$/.test(pin)) {
-            return res.status(400).json({
-                error: "El PIN debe ser un número de 6 dígitos."
-            });
-        }
+       
 
         const createdBy = req.user.id;
 
@@ -77,26 +71,23 @@ const profilePost = async (req, res) => {
 
 const profilePut = async (req, res) => {
     try {
-        console.log("Usuario autenticado:", req.user); // Verificar que req.user esté definido
+        console.log("Usuario autenticado:", req.user); 
 
-        const { id } = req.params; // Obtener el ID del perfil desde los parámetros de la URL
+        const { id } = req.params; 
         const { fullName, pin, avatar } = req.body;
 
-        // Validar que todos los campos obligatorios estén presentes
         if (!fullName || !pin || !avatar) {
             return res.status(400).json({
                 error: "Todos los campos son obligatorios."
             });
         }
 
-        // Validar que el PIN sea un número de 6 dígitos
         if (pin.length !== 6 || !/^\d+$/.test(pin)) {
             return res.status(400).json({
                 error: "El PIN debe ser un número de 6 dígitos."
             });
         }
 
-        // Verificar que el perfil pertenezca al usuario autenticado
         const profile = await Profile.findOne({ _id: id, createdBy: req.user.id });
         if (!profile) {
             return res.status(404).json({
@@ -104,14 +95,12 @@ const profilePut = async (req, res) => {
             });
         }
 
-        // Actualizar el perfil
         profile.fullName = fullName;
         profile.pin = pin;
         profile.avatar = avatar;
 
         const updatedProfile = await profile.save();
 
-        // Poblar el campo createdBy para devolver el perfil actualizado con los datos del usuario
         const populatedProfile = await Profile.findById(updatedProfile._id).populate('createdBy');
 
         res.status(200).json({
@@ -136,6 +125,7 @@ const profilePut = async (req, res) => {
 const profileDelete = async (req, res) => {
     try {
         console.log("Usuario autenticado:", req.user); 
+        console.log("id:", req.params); 
 
         if (!req.user || !req.user.id) {
             return res.status(401).json({ error: "No autorizado" });
@@ -143,12 +133,13 @@ const profileDelete = async (req, res) => {
 
         const { id } = req.params; 
         const profile = await Profile.findOneAndDelete({ _id: id, createdBy: req.user.id });
+        console.log("profile:", profile); 
 
         if (!profile) {
             return res.status(404).json({ error: "Perfil no encontrado o no tienes permisos para eliminarlo" });
         }
 
-        res.status(200).json({ message: "Perfil eliminado exitosamente" });
+        res.status(200).json(profile);
 
     } catch (err) {
         console.error("Error al eliminar el perfil:", err);
@@ -156,9 +147,35 @@ const profileDelete = async (req, res) => {
     }
 };
 
+const validatePin = async (req, res) => {
+    try {
+      const { profileId } = req.params; 
+      const { pin } = req.body; 
+      const userId = req.user.id;
+      console.log('Datos recibidos:', { profileId, pin, userId });
+
+      const profile = await Profile.findOne({ _id: profileId, createdBy: req.user.id });
+  
+      if (!profile) {
+        return res.status(404).json({ error: "Perfil no encontrado o no pertenece al usuario." });
+      }
+  
+      if (profile.pin.toString() === pin.toString()) {
+        return res.status(200).json({ success: true, profile });
+      } else {
+        return res.status(401).json({ success: false, message: "PIN incorrecto." });
+      }
+    } catch (err) {
+      console.error("Error al validar el PIN del perfil:", err);
+      res.status(500).json({ error: "Error interno del servidor" });
+    }
+}
+
+
 module.exports = {
     profilePost,
     profileGet,
     profilePut,
-    profileDelete
+    profileDelete,
+    validatePin
 };
