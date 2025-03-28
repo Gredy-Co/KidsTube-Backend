@@ -2,8 +2,9 @@ const Profile = require("../models/ProfileModel");
 
 const profileGet = async (req, res) => {
     try {
+        console.log("Usuario autenticado:", req.user);
         if (!req.user || !req.user.id) {
-            return res.status(401).json();
+            return res.status(401).json({ error: "No autorizado" });
         }
 
         const profiles = await Profile.find({ createdBy: req.user.id });
@@ -12,24 +13,27 @@ const profileGet = async (req, res) => {
             return res.status(404).json({ error: "No se encontraron perfiles para este usuario" });
         }
 
-        res.status(200).json( profiles );
+        res.status(200).json({ data: profiles });
 
     } catch (err) {
         console.error("Error al obtener los perfiles:", err);
-        res.status(500).json();
+        res.status(500).json({ error: "Error interno del servidor" });
     }
 };
+
 
 // Create a profile
 const profilePost = async (req, res) => {
     try {
-        const { fullName, pin, avatar } = req.body;
 
+        const { fullName, pin, avatar } = req.body;
         if (!req.user || !req.user.id) {
-            return res.status(401).json();
+            return res.status(401).json({ error: "No autorizado" });
         }
         if (!fullName || !pin || !avatar) {
-            return res.status(400).json();
+            return res.status(400).json({
+                error: "Todos los campos son obligatorios."
+            });
         }
 
         const createdBy = req.user.id;
@@ -56,7 +60,6 @@ const profilePost = async (req, res) => {
         res.status(500).json();
     }
 };
-// Update a profile
 
 const profilePut = async (req, res) => {
     try {
@@ -71,12 +74,16 @@ const profilePut = async (req, res) => {
         }
 
         if (pin.length !== 6 || !/^\d+$/.test(pin)) {
-            return res.status(400).json();
+            return res.status(400).json({
+                error: "El PIN debe ser un número de 6 dígitos."
+            });
         }
 
         const profile = await Profile.findOne({ _id: id, createdBy: req.user.id });
         if (!profile) {
-            return res.status(404).json();
+            return res.status(404).json({
+                error: "Perfil no encontrado o no tienes permisos para editarlo."
+            });
         }
 
         profile.fullName = fullName;
@@ -90,6 +97,7 @@ const profilePut = async (req, res) => {
         res.status(200).json(populatedProfile
         );
     } catch (err) {
+        console.error("Error al actualizar el perfil:", err);
 
         if (err.name === "ValidationError") {
             return res.status(422).json();
@@ -98,8 +106,6 @@ const profilePut = async (req, res) => {
         res.status(500).json();
     }
 };
-
-// Delete a profile
 
 const profileDelete = async (req, res) => {
     try {
@@ -113,17 +119,16 @@ const profileDelete = async (req, res) => {
         console.log("profile:", profile); 
 
         if (!profile) {
-            return res.status(404).json();
+            return res.status(404).json({ error: "Perfil no encontrado o no tienes permisos para eliminarlo" });
         }
 
         res.status(200).json(profile);
 
     } catch (err) {
-        res.status(500).json();
+        console.error("Error al eliminar el perfil:", err);
+        res.status(500).json({ error: "Error interno del servidor" });
     }
 };
-
-// Validate pin profile
 
 const validatePin = async (req, res) => {
     try {
@@ -145,11 +150,11 @@ const validatePin = async (req, res) => {
         return res.status(401).json({ success: false, message: "PIN incorrecto." });
       }
     } catch (err) {
-      res.status(500).json();
+      console.error("Error al validar el PIN del perfil:", err);
+      res.status(500).json({ error: "Error interno del servidor" });
     }
 }
 
-//Get Id by profile
 const getProfileById = async (req, res) => {
     try {
         console.log("Usuario autenticado:", req.user);
