@@ -13,9 +13,7 @@ const videoPost = async (req, res) => {
 
         // Validate required fields
         if (!name || !url) {
-            return res.status(400).json({
-                error: "Missing required fields: 'name' and 'url' are mandatory."
-            });
+            return res.status(400).json();
         }
 
         // Create a new video instance
@@ -29,9 +27,8 @@ const videoPost = async (req, res) => {
         const savedVideo = await video.save();
 
         // Return the created video with a 201 status code
-        res.status(201).json({
-            data: savedVideo
-        });
+        res.status(201).json( savedVideo
+        );
     } catch (err) {
         console.error("Error while saving the video:", err);
 
@@ -42,9 +39,7 @@ const videoPost = async (req, res) => {
             });
         }
 
-        res.status(500).json({
-            error: "Internal server error"
-        });
+        res.status(500).json();
     }
 };
 
@@ -60,7 +55,7 @@ const videoGet = async (req, res) => {
         if (req.query && req.query.id) {
             const video = await Video.findById(req.query.id);
             if (!video) {
-                return res.status(404).json({ error: "Video not found" });
+                return res.status(404).json();
             }
             return res.status(200).json(video);
         } else {
@@ -71,21 +66,21 @@ const videoGet = async (req, res) => {
         console.error("Error while fetching videos:", err);
 
         if (err.name === "CastError") {
-            return res.status(400).json({ error: "Invalid video ID format" });
+            return res.status(400).json();
         }
 
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json();
     }
 };
 
 
 const videoGetById = async (req, res) => {
     try {
-        const { id } = req.params; // Obtener el ID desde los parámetros de la ruta
+        const { id } = req.params; 
         const video = await Video.findById(id);
 
         if (!video) {
-            return res.status(404).json({ error: "Video not found" });
+            return res.status(404).json();
         }
 
         res.status(200).json(video);
@@ -93,10 +88,10 @@ const videoGetById = async (req, res) => {
         console.error("Error while fetching video by ID:", err);
 
         if (err.name === "CastError") {
-            return res.status(400).json({ error: "Invalid video ID format" });
+            return res.status(400).json();
         }
 
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json();
     }
 };
 
@@ -115,7 +110,7 @@ const videoPut = async (req, res) => {
         // Verificar si el video existe
         const video = await Video.findById(id);
         if (!video) {
-            return res.status(404).json({ error: "Video not found" });
+            return res.status(404).json();
         }
 
         // Actualizar solo los campos proporcionados en el cuerpo de la solicitud
@@ -140,7 +135,7 @@ const videoPut = async (req, res) => {
             });
         }
 
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json();
     }
 };
 
@@ -155,19 +150,19 @@ const videoDelete = async (req, res) => {
         const { id } = req.params;  
 
         if (!id) {
-            return res.status(400).json({ error: "You must provide a valid ID." });
+            return res.status(400).json();
         }
 
         const deletedVideo = await Video.findByIdAndDelete(id);
 
         if (!deletedVideo) {
-            return res.status(404).json({ error: "Video not found." });
+            return res.status(404).json();
         }
 
         res.status(200).json(deletedVideo);
     } catch (error) {
         console.error("Error deleting the video:", error);
-        res.status(500).json({ error: "An error occurred while deleting the video." });
+        res.status(500).json();
     }
 };
   

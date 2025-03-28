@@ -21,7 +21,6 @@ const ProfileSchema = new mongoose.Schema({
     ref: 'user', 
     required: true 
   },
-  role: { type: String, enum: ['parent', 'profile'], default: 'profile' }
 
 });
 

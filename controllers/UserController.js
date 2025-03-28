@@ -15,18 +15,14 @@ const userPost = async (req, res) => {
 
         // Validate required fields
         if (!email || !password || !phoneNumber || !pin || !firstName || !lastName || !country || !dateOfBirth || !status) {
-            return res.status(400).json({
-                error: "All fields are required."
-            });
+            return res.status(400).json();
         }
 
         // Convertir la fecha de nacimiento a un objeto Date
         const birthDate = new Date(dateOfBirth);
 
         if (isNaN(birthDate.getTime())) {
-            return res.status(400).json({
-                error: "Invalid date of birth format."
-            });
+            return res.status(400).json();
         }
 
         // Create a new user instance
@@ -50,31 +46,23 @@ const userPost = async (req, res) => {
         delete userResponse.password;
 
         // Return the created user with a 201 status code
-        res.status(201).json({
-            data: userResponse
-        });
+        res.status(201).json( userResponse
+        );
     } catch (err) {
         console.error("Error while saving the user:", err);
 
         // Handle specific errors (e.g., validation errors)
         if (err.name === "ValidationError") {
-            return res.status(422).json({
-                error: "Validation error",
-                details: err.message
-            });
+            return res.status(422).json();
         }
 
         // Handle duplicate email error
         if (err.code === 11000) {
-            return res.status(409).json({
-                error: "The email is already registered."
-            });
+            return res.status(409).json();
         }
 
         // Handle generic server errors
-        res.status(500).json({
-            error: "Internal Server Error"
-        });
+        res.status(500).json();
     }
 };
 
@@ -85,20 +73,20 @@ const userLogin = async (req, res) => {
     const { email, password} = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required.' });
+        return res.status(400).json();
     }
 
     try {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json();
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json();
         }
 
         const token = jwt.sign(
@@ -117,7 +105,7 @@ const userLogin = async (req, res) => {
         });
     } catch (error) {
         console.error("Login error:", error);
-        return res.status(500).json({ message: 'Internal Server Error' });
+        return res.status(500).json();
     }
 };
 
@@ -130,7 +118,7 @@ const validateUserPin = async (req, res) => {
     const user = await User.findOne({ _id: req.user.id });
 
     if (!user) {
-        return res.status(404).json({ error: "Perfil no encontrado o no pertenece al usuario." });
+        return res.status(404).json();
     }
 
     if (user.pin.toString() === pin.toString()) {
@@ -140,14 +128,11 @@ const validateUserPin = async (req, res) => {
     }
     } catch (err) {
     console.error("Error al validar el PIN del perfil:", err);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json();
     }
 }
   
   
-
-
-
 module.exports = {
     userPost,
     userLogin,

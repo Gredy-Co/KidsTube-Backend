@@ -13,9 +13,7 @@ const playlistPost = async (req, res) => {
 
         // Validate required fields
         if (!name || !associatedProfiles || !Array.isArray(associatedProfiles) || associatedProfiles.length === 0) {
-            return res.status(400).json({
-                error: "Missing required fields: 'name' and at least one 'associatedProfiles' are mandatory."
-            });
+            return res.status(400).json();
         }
 
         // Create a new playlist instance
@@ -29,18 +27,15 @@ const playlistPost = async (req, res) => {
         const savedPlaylist = await playlist.save();
 
         // Return the created playlist with a 201 status code
-        res.status(201).json({ data: savedPlaylist });
+        res.status(201).json(savedPlaylist );
     } catch (err) {
         console.error("Error while saving the playlist:", err);
 
         if (err.name === "ValidationError") {
-            return res.status(422).json({
-                error: "Validation failed",
-                details: err.message
-            });
+            return res.status(422).json();
         }
 
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json();
     }
 };
 
@@ -72,14 +67,12 @@ const playlistGetAll = async (req, res) => {
         console.error("Error while fetching playlists:", err);
 
         if (err.name === "CastError") {
-            return res.status(400).json({ error: "Invalid playlist ID format" });
+            return res.status(400).json();
         }
 
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json();
     }
 };
-
-
 
 /**
  * Edit playlist by _id
@@ -111,7 +104,7 @@ const playlistPut = async (req, res) => {
         return res.json(playlist);
     } catch (error) {
         console.error('Error while updating the playlist:', error);
-        return res.status(500).json({ error: "An error occurred while updating the playlist." });
+        return res.status(500).json();
     }
 };
 
@@ -138,7 +131,7 @@ const playlistDelete = async (req, res) => {
         res.status(200).json(deletedPlaylist);
     } catch (error) {
         console.error("Error deleting the playlist:", error);
-        res.status(500).json({ error: "An error occurred while deleting the playlist." });
+        res.status(500).json();
     }
 };
 
@@ -158,7 +151,7 @@ const playlistGetById = async (req, res) => {
         return res.status(200).json(playlist);
     } catch (err) {
         console.error("Error while fetching playlist by ID:", err);
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json();
     }
 };
 
@@ -171,13 +164,13 @@ const playlistGetByProfileId = async (req, res) => {
         .populate('videos');
   
       if (!playlists || playlists.length === 0) {
-        return res.status(404).json({ error: "No playlists found for this profile" });
+        return res.status(404).json();
       }
   
       return res.status(200).json(playlists);
     } catch (err) {
       console.error("Error while fetching playlists by profile ID:", err);
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json();
     }
   };
   

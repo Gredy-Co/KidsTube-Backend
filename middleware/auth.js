@@ -45,4 +45,4 @@ const authorizeRole = (allowedRoles) => {
     }
   };
 };
-module.exports = authMiddleware, authorizeRole;
+module.exports = authMiddleware;

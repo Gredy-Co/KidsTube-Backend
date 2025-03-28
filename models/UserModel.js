@@ -55,7 +55,6 @@ const userSchema = new Schema({
         enum: ['active', 'inactive'],
         default: 'active'
     },
-    role: { type: String, enum: ['parent', 'profile'], default: 'parent' }
 
 });
 
