@@ -12,6 +12,8 @@ const userRoutes = require('./routes/userRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
 const videoRoutes = require('./routes/videoRoutes');
+const countryRoutes = require('./routes/countryRoutes');
+
 
 const app = express();
 
@@ -42,6 +44,7 @@ app.use('/api', userRoutes);
 app.use('/api', profileRoutes);
 app.use('/api', playlistRoutes);
 app.use('/api', videoRoutes);
+app.use('/api', countryRoutes);
 
 // Start Server
 const PORT = 3000;

@@ -8,8 +8,8 @@ const authMiddleware = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, 'tu_clave_secreta'); 
-    console.log("Usuario decodificado:", decoded);
+    const decoded = jwt.verify(token, 'your_secret_key'); 
+    console.log("Decoded user:", decoded);
     req.user = decoded; 
     next(); 
   } catch (error) {
@@ -22,7 +22,7 @@ const authorizeRole = (allowedRoles) => {
     const profileId = req.params.profileId || req.body.profileId; 
 
     if (!token || !profileId) {
-      return res.status(401).json({ message: 'Token o ID de perfil no proporcionados.' });
+      return res.status(401).json({ message: 'Token or profile ID not provided.' });
     }
 
     try {
@@ -31,18 +31,18 @@ const authorizeRole = (allowedRoles) => {
 
       const profile = await Profile.findOne({ _id: profileId, userId: parentUserId });
       if (!profile) {
-        return res.status(403).json({ message: 'Acceso denegado. El perfil no pertenece al usuario.' });
+        return res.status(403).json({ message: 'Access denied. The profile does not belong to the user.' });
       }
 
       if (!allowedRoles.includes(profile.role)) {
-        return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para esta acción.' });
+        return res.status(403).json({ message: 'Access denied. You do not have permission to perform this action.' });
       }
 
       req.profile = profile;
       next();
     } catch (err) {
-      return res.status(403).json({ message: 'Token inválido o expirado.' });
+      return res.status(403).json({ message: 'Invalid or expired token.' });
     }
   };
 };
-module.exports = authMiddleware;
+module.exports = authMiddleware, authorizeRole;

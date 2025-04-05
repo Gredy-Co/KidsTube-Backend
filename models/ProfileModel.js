@@ -4,13 +4,16 @@ const mongoose = require('mongoose');
 const Schema   = mongoose.Schema;
 const ProfileSchema = new mongoose.Schema({
   fullName: { 
-    type: String, 
-    required: true 
+    type: String,
+    trim: true, 
+    required: true,
+    match: [/^[a-zA-Z\sáéíóúÁÉÍÓÚñÑ'-]+$/, 'Please enter a valid name'] 
   },
   pin: { 
     type: String, 
+    trim: true, 
     required: true, 
-    minlength: 4
+    match: [/^\d{6}$/, 'The PIN must contain 6 digits.']
   },
   avatar: { 
     type: String, 
@@ -21,7 +24,6 @@ const ProfileSchema = new mongoose.Schema({
     ref: 'user', 
     required: true 
   },
-
 });
 
 module.exports = mongoose.model('Profile', ProfileSchema);

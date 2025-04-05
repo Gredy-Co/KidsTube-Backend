@@ -2,22 +2,22 @@ const Profile = require("../models/ProfileModel");
 
 const profileGet = async (req, res) => {
     try {
-        console.log("Usuario autenticado:", req.user);
+        console.log("Authenticated user:", req.user);
         if (!req.user || !req.user.id) {
-            return res.status(401).json({ error: "No autorizado" });
+            return res.status(401).json({ error: "Unauthorized" });
         }
 
         const profiles = await Profile.find({ createdBy: req.user.id });
 
         if (profiles.length === 0) {
-            return res.status(404).json({ error: "No se encontraron perfiles para este usuario" });
+            return res.status(404).json({ error: "No profiles were found for this user" });
         }
 
         res.status(200).json({ data: profiles });
 
     } catch (err) {
-        console.error("Error al obtener los perfiles:", err);
-        res.status(500).json({ error: "Error interno del servidor" });
+        console.error("Error getting profiles:", err);
+        res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
@@ -28,11 +28,11 @@ const profilePost = async (req, res) => {
 
         const { fullName, pin, avatar } = req.body;
         if (!req.user || !req.user.id) {
-            return res.status(401).json({ error: "No autorizado" });
+            return res.status(401).json({ error: "Unauthorized" });
         }
         if (!fullName || !pin || !avatar) {
             return res.status(400).json({
-                error: "Todos los campos son obligatorios."
+                error: "All fields are required."
             });
         }
 
@@ -51,7 +51,7 @@ const profilePost = async (req, res) => {
 
         res.status(201).json(populatedProfile);
     } catch (err) {
-        console.error("Error al guardar el perfil:", err);
+        console.error("Error saving profile:", err);
 
         if (err.name === "ValidationError") {
             return res.status(422).json();
@@ -75,14 +75,14 @@ const profilePut = async (req, res) => {
 
         if (pin.length !== 6 || !/^\d+$/.test(pin)) {
             return res.status(400).json({
-                error: "El PIN debe ser un número de 6 dígitos."
+                error: "The PIN must be a 6-digit number."
             });
         }
 
         const profile = await Profile.findOne({ _id: id, createdBy: req.user.id });
         if (!profile) {
             return res.status(404).json({
-                error: "Perfil no encontrado o no tienes permisos para editarlo."
+                error: "Profile not found or you do not have permission to edit it."
             });
         }
 
@@ -97,7 +97,7 @@ const profilePut = async (req, res) => {
         res.status(200).json(populatedProfile
         );
     } catch (err) {
-        console.error("Error al actualizar el perfil:", err);
+        console.error("Error updating profile:", err);
 
         if (err.name === "ValidationError") {
             return res.status(422).json();
@@ -119,14 +119,14 @@ const profileDelete = async (req, res) => {
         console.log("profile:", profile); 
 
         if (!profile) {
-            return res.status(404).json({ error: "Perfil no encontrado o no tienes permisos para eliminarlo" });
+            return res.status(404).json({ error: "Profile not found or you do not have permission to delete it" });
         }
 
         res.status(200).json(profile);
 
     } catch (err) {
-        console.error("Error al eliminar el perfil:", err);
-        res.status(500).json({ error: "Error interno del servidor" });
+        console.error("Error deleting profile:", err);
+        res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
@@ -141,27 +141,27 @@ const validatePin = async (req, res) => {
       const profile = await Profile.findOne({ _id: profileId, createdBy: req.user.id });
   
       if (!profile) {
-        return res.status(404).json({ error: "Perfil no encontrado o no pertenece al usuario." });
+        return res.status(404).json({ error: "Profile not found or does not belong to the user." });
       }
   
       if (profile.pin.toString() === pin.toString()) {
         return res.status(200).json({ success: true, profile });
       } else {
-        return res.status(401).json({ success: false, message: "PIN incorrecto." });
+        return res.status(401).json({ success: false, message: "Incorrect PIN." });
       }
     } catch (err) {
-      console.error("Error al validar el PIN del perfil:", err);
-      res.status(500).json({ error: "Error interno del servidor" });
+      console.error("Error validating profile PIN:", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
 }
 
 const getProfileById = async (req, res) => {
     try {
-        console.log("Usuario autenticado:", req.user);
+        console.log("Authenticated user:", req.user);
         
         // Verificar autenticación
         if (!req.user || !req.user.id) {
-            return res.status(401).json({ error: "No autorizado" });
+            return res.status(401).json({ error: "Unauthorized" });
         }
 
         // Obtener el ID del perfil de los parámetros de la ruta
@@ -169,7 +169,7 @@ const getProfileById = async (req, res) => {
         
         // Validar el ID
         if (!profileId) {
-            return res.status(400).json({ error: "Se requiere el ID del perfil" });
+            return res.status(400).json({ error: "Profile ID is required" });
         }
 
         // Buscar el perfil (verificando que pertenezca al usuario)
@@ -180,7 +180,7 @@ const getProfileById = async (req, res) => {
 
         if (!profile) {
             return res.status(404).json({ 
-                error: "Perfil no encontrado o no tienes permisos para acceder a él" 
+                error: "Profile not found or you do not have permission to access it" 
             });
         }
 
@@ -188,14 +188,14 @@ const getProfileById = async (req, res) => {
         res.status(200).json(profile);
 
     } catch (err) {
-        console.error("Error al obtener el perfil:", err);
+        console.error("Error getting profile:", err);
         
         // Manejar específicamente errores de ID inválido
         if (err.name === 'CastError') {
-            return res.status(400).json({ error: "ID de perfil inválido" });
+            return res.status(400).json({ error: "Invalid profile ID" });
         }
         
-        res.status(500).json({ error: "Error interno del servidor" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 };
 module.exports = {
