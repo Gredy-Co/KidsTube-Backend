@@ -3,12 +3,11 @@ const { validateUserData } = require('../validations/user/validateUserData');
 const validateUserPin = require('../validations/user/validateUserPin');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { sendVerificationEmail } = require('../services/emailService');
+const { generateVerificationToken, verifyToken } = require('../services/tokenService');
 
 /**
  * Creates a user
- *
- * @param {*} req
- * @param {*} res
  */
 const userPost = async (req, res) => {
     try {
@@ -17,7 +16,7 @@ const userPost = async (req, res) => {
             return res.status(422).json({ errors });
         }
 
-        const { email, password, phoneNumber, pin, firstName, lastName, country, dateOfBirth, status } = req.body;
+        const { email, password, phoneNumber, pin, firstName, lastName, country, dateOfBirth } = req.body;
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -33,10 +32,24 @@ const userPost = async (req, res) => {
             lastName,
             country,
             dateOfBirth: new Date(dateOfBirth),
-            status
+            status: 'pending'
         });
 
         const savedUser = await user.save();
+
+        // Generate token and verification link
+        const verificationToken = generateVerificationToken(savedUser._id);
+        const verificationLink = `${process.env.FRONTEND_URL}/user/verify/${verificationToken}`;
+
+        // Send email (with error handling)
+        try {
+            await sendVerificationEmail(email, verificationLink);
+        } catch (emailError) {
+            console.error('Error sending email:', emailError);
+            // Optionally: delete the user if email fails
+            await User.findByIdAndDelete(savedUser._id);
+            return res.status(500).json({ error: 'Could not send verification email' });
+        }
 
         const userResponse = savedUser.toObject();
         delete userResponse.password;
@@ -45,6 +58,36 @@ const userPost = async (req, res) => {
 
     } catch (err) {
         console.error("Error while saving the user:", err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+/**
+ * Verifies a user's account
+ */
+const verifyAccount = async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const { userId } = verifyToken(token);
+        
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { status: 'active' },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        return res.status(200).json({ message: 'Account verified successfully.' });
+
+    } catch (err) {
+        console.error("Error verifying account:", err);
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Verification link has expired.' });
+        }
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -110,5 +153,6 @@ const userLogin = async (req, res) => {
 module.exports = {
     userPost,
     userLogin,
+    verifyAccount,
     validateUserPin
 };

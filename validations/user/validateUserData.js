@@ -37,7 +37,7 @@ function validateUserData(data) {
     if (!phoneNumber || !phoneRegex.test(phoneNumber)) errors.push("Invalid phone number.");
     
     // Status validation
-    if (!status || !['active', 'inactive'].includes(status)) errors.push("Status must be active or inactive.");
+    if (!status || !['pending'].includes(status)) errors.push("Status must be pending.");
 
     return errors;
 }
