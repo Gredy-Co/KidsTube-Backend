@@ -20,7 +20,8 @@ const videoPost = async (req, res) => {
         const video = new Video({
             name,
             url,
-            description
+            description,
+            createdBy: req.user.id, 
         });
 
         // Save the video to the database
@@ -77,6 +78,7 @@ const videoGet = async (req, res) => {
 const videoGetById = async (req, res) => {
     try {
         const { id } = req.params; 
+        
         const video = await Video.findById(id);
 
         if (!video) {
@@ -166,10 +168,32 @@ const videoDelete = async (req, res) => {
     }
 };
   
+const videoGetByUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const videos = await Video.find({ createdBy: userId });
+
+        if (!videos || videos.length === 0) {
+            return res.status(404).json({ message: "No videos found for this user." });
+        }
+
+        res.status(200).json(videos);
+    } catch (err) {
+        console.error("Error while fetching videos by user ID:", err);
+
+        if (err.name === "CastError") {
+            return res.status(400).json({ message: "Invalid user ID format." });
+        }
+
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
 module.exports = {
     videoPost,
     videoGet,
     videoGetById,
     videoPut,
-    videoDelete
+    videoDelete,
+    videoGetByUser
 };

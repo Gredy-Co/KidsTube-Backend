@@ -19,6 +19,11 @@ const video = new Schema({
     trim: true, 
     required: true,
    },
+   createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'user', 
+    required: [true, "Created by reference is required"],
+},
 });
 
 module.exports = mongoose.model('Video', video);

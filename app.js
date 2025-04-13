@@ -13,6 +13,7 @@ const profileRoutes = require('./routes/profileRoutes');
 const playlistRoutes = require('./routes/playlistRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const countryRoutes = require('./routes/countryRoutes');
+const youtubeRoutes = require('./routes/youtubeRoutes');
 
 
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api', profileRoutes);
 app.use('/api', playlistRoutes);
 app.use('/api', videoRoutes);
 app.use('/api', countryRoutes);
+app.use('/api/youtube', youtubeRoutes);
 
 // Start Server
 const PORT = 3000;
