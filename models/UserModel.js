@@ -63,7 +63,9 @@ const userSchema = new Schema({
         trim: true,
         enum: ['active', 'pending', 'inactive'],
         default: 'pending'
-    }
+    },
+    twoFACode: { type: String, default: null },
+    twoFAExpires: { type: Date, default: null }
 });
 
 // Middleware to encrypt the password before saving the user
