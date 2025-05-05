@@ -48,6 +48,9 @@ const getPopularVideos = async (req, res) => {
           chart: 'mostPopular', 
           key: YOUTUBE_API_KEY,
           maxResults: 12, 
+          videoCategoryId: 10,
+          safeSearch: 'strict',
+          q: 'para niños',
         },
       });
   

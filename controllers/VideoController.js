@@ -53,26 +53,36 @@ const videoPost = async (req, res) => {
  */
 const videoGet = async (req, res) => {
     try {
-        if (req.query && req.query.id) {
-            const video = await Video.findById(req.query.id);
-            if (!video) {
-                return res.status(404).json();
-            }
-            return res.status(200).json(video);
-        } else {
-            const videos = await Video.find();
-            return res.status(200).json(videos);
+      const { id } = req.query;
+  
+      const { user } = req;
+      if (!user) {
+        return res.status(401).json({ error: "No autorizado" });
+      }
+  
+      if (id) {
+        const video = await Video.findOne({ _id: id, createdBy: user.id });
+  
+        if (!video) {
+          return res.status(404).json({ error: "Video no encontrado o no tienes permisos" });
         }
+  
+        return res.status(200).json(video);
+      }
+  
+      const videos = await Video.find({ createdBy: user.id });
+  
+      return res.status(200).json(videos);
     } catch (err) {
-        console.error("Error while fetching videos:", err);
-
-        if (err.name === "CastError") {
-            return res.status(400).json();
-        }
-
-        return res.status(500).json();
+      console.error("Error while fetching videos:", err);
+  
+      if (err.name === "CastError") {
+        return res.status(400).json({ error: "ID inválido" });
+      }
+  
+      return res.status(500).json({ error: "Error interno del servidor" });
     }
-};
+  };
 
 
 const videoGetById = async (req, res) => {
