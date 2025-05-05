@@ -18,18 +18,6 @@ const userSchema = new Schema({
         required: true,
         match: [/^[a-zA-Z\sáéíóúÁÉÍÓÚñÑ'-]+$/, 'Please enter a valid last name']
     },
-    dateOfBirth: {
-        type: Date,
-        required: true,
-        validate: {
-            validator: function(value) {
-                const minAgeDate = new Date();
-                minAgeDate.setFullYear(minAgeDate.getFullYear() - 18);
-                return value && value instanceof Date && value <= minAgeDate;
-            },
-            message: 'You must be at least 18 years old'
-        }
-    },
     email: {
         type: String,
         unique: true,
@@ -45,18 +33,32 @@ const userSchema = new Schema({
     },
     pin: {
         type: String,
-        required: true,
         match: [/^\d{6}$/, 'The PIN must contain 6 digits.']
     },
     phoneNumber: {
         type: String,
         match: [/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number.']
     },
+    dateOfBirth: {
+        type: Date,
+        validate: {
+            validator: function(value) {
+                if (this.isGoogleAuth) return true; // no validar si es Google
+                const minAgeDate = new Date();
+                minAgeDate.setFullYear(minAgeDate.getFullYear() - 18);
+                return value && value instanceof Date && value <= minAgeDate;
+            },
+            message: 'You must be at least 18 years old'
+        }
+    },
     country: {
         type: String,
         trim: true,
-        required: true,
-        match: [/^[a-zA-Z\sáéíóúÁÉÍÓÚñÑ'-]+$/, 'Please enter a valid last name']
+        match: [/^[a-zA-Z\sáéíóúÁÉÍÓÚñÑ'-]+$/, 'Please enter a valid country']
+    },
+    isGoogleAuth: {
+        type: Boolean,
+        default: false
     },
     status: {
         type: String,
@@ -64,9 +66,16 @@ const userSchema = new Schema({
         enum: ['active', 'pending', 'inactive'],
         default: 'pending'
     },
-    twoFACode: { type: String, default: null },
-    twoFAExpires: { type: Date, default: null }
+    twoFACode: { 
+        type: String, 
+        default: null 
+    },
+    twoFAExpires: { 
+        type: Date, 
+        default: null 
+    }
 });
+
 
 // Middleware to encrypt the password before saving the user
 userSchema.pre('save', async function (next) {

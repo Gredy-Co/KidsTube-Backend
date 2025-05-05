@@ -1,4 +1,5 @@
 const User = require("../models/UserModel");
+const admin = require('../config/firebase');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -14,45 +15,52 @@ const { sendVerificationCode } = require('../services/sms.service');
  * Creates a user
  */
 const userPost = async (req, res) => {
+    console.log("Request body:", req.body);
     try {
+        const {
+            email, password, phoneNumber, pin,
+            firstName, lastName, country, dateOfBirth,
+            isGoogleAuth, status = 'pending'
+        } = req.body;
+
         const errors = validateUserData(req.body);
         if (errors.length > 0) {
             return res.status(422).json({ errors });
         }
-
-        const { email, password, phoneNumber, pin, firstName, lastName, country, dateOfBirth } = req.body;
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(409).json({ error: 'Email is already in use.' });
         }
 
-        const user = new User({
+        const userData = {
             email,
-            password,
-            phoneNumber,
-            pin,
-            firstName,
-            lastName,
-            country,
-            dateOfBirth: new Date(dateOfBirth),
-            status: 'pending'
-        });
+            password: password,
+            phoneNumber: isGoogleAuth ? null : phoneNumber,
+            pin: isGoogleAuth ? null : pin,
+            firstName: isGoogleAuth ? firstName || '' : firstName,
+            lastName: isGoogleAuth ? lastName || '' : lastName,
+            country: isGoogleAuth ? null : country,
+            dateOfBirth: isGoogleAuth ? null : (dateOfBirth ? new Date(dateOfBirth) : null),
+            status,
+            isGoogleAuth
+        };
 
+        const user = new User(userData);
         const savedUser = await user.save();
 
-        // Generate token and verification link
-        const verificationToken = generateVerificationToken(savedUser._id);
-        const verificationLink = `${process.env.FRONTEND_URL}/user/verify/${verificationToken}`;
-
-        // Send email (with error handling)
-        try {
-            await sendVerificationEmail(email, verificationLink);
-        } catch (emailError) {
-            console.error('Error sending email:', emailError);
-            // Optionally: delete the user if email fails
-            await User.findByIdAndDelete(savedUser._id);
-            return res.status(500).json({ error: 'Could not send verification email' });
+        // Enviar correo solo a usuarios normales
+        if (!isGoogleAuth) {
+            const verificationToken = generateVerificationToken(savedUser._id);
+            const verificationLink = `${process.env.FRONTEND_URL}/user/verify/${verificationToken}`;
+            try {
+                console.log("Sending verification email to:", email);
+                await sendVerificationEmail(email, verificationLink);
+            } catch (emailError) {
+                console.error('Error sending email:', emailError);
+                await User.findByIdAndDelete(savedUser._id);
+                return res.status(500).json({ error: 'Could not send verification email' });
+            }
         }
 
         const userResponse = savedUser.toObject();
@@ -65,6 +73,121 @@ const userPost = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+
+
+/**
+ * Logs in a user
+ */
+const userLogin = async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(401).json({ message: "Invalid credentials." });
+        }
+
+        // ✅ Login especial para Google
+        if (user.isGoogleAuth) {
+            const isGoogleMatch = await bcrypt.compare(password, user.password);
+            if (!isGoogleMatch) {
+                return res.status(401).json({ message: "Invalid credentials." });
+            }
+
+            const token = jwt.sign(
+                { id: user._id, email: user.email },
+                'your_secret_key',
+                { expiresIn: '1h' }
+            );
+
+            return res.status(200).json({
+                message: 'Google login successful.',
+                token,
+                user
+            });
+        }
+
+        // 🧾 Usuarios normales: verificar estado activo
+        if (user.status !== "active") {
+            return res.status(403).json({
+                message: "Access denied. Only users with 'active' status can log in."
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid credentials." });
+        }
+
+        // 🔐 2FA para usuarios normales
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        user.twoFACode = code;
+        user.twoFAExpires = new Date(Date.now() + 5 * 60000);
+        await user.save();
+
+        await sendVerificationCode(user.phoneNumber, code);
+
+        return res.status(200).json({
+            message: '2FA code sent, please enter it.',
+            userId: user._id
+        });
+
+    } catch (error) {
+        console.error("Login error:", error);
+        return res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+
+/**
+ * Logs in a user via Google ID token
+ */
+const googleLogin = async (req, res) => {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+        return res.status(400).json({ message: 'Missing Google ID token.' });
+    }
+
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const email = decodedToken.email;
+
+        if (!email) {
+            return res.status(400).json({ message: 'No email associated with Google account.' });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user || !user.isGoogleAuth) {
+            return res.status(404).json({ message: 'Google user not found. Please sign up first.' });
+        }
+
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            'your_secret_key',
+            { expiresIn: '1h' }
+        );
+
+        return res.status(200).json({
+            message: 'Google login successful.',
+            token,
+            user,
+        });
+
+    } catch (error) {
+        console.error("Google login error:", error);
+        return res.status(400).json({ message: 'Invalid or expired Google ID token.' });
+    }
+};
+
 
 /**
  * Verifies a user's account
@@ -97,64 +220,67 @@ const verifyAccount = async (req, res) => {
 };
 
 
+const updateUserProfile = async (req, res) => {
+    const authHeader = req.headers.authorization;
 
-/**
- * Logs in a user
- */
-const userLogin = async (req, res) => {
-    const { email, password } = req.body;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'No token provided.' });
+    }
 
-    // Check if both email and password are provided
-    if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required." });
+    const token = authHeader.split(' ')[1];
+
+    let decoded;
+    try {
+        decoded = jwt.verify(token, 'your_secret_key');
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid or expired token.' });
+    }
+
+    const userId = decoded.id;
+
+    const {
+        phoneNumber, pin,
+        country, dateOfBirth,
+        isGoogleAuth
+    } = req.body;
+
+    const updatedData = {
+        phoneNumber, pin,
+        country, dateOfBirth,
+        status: 'active',
+        isGoogleAuth
+    };
+
+    const errors = validateUserData({
+        country, dateOfBirth, pin, phoneNumber, isGoogleAuth
+    }, { isUpdate: true });
+
+    if (errors.length > 0) {
+        return res.status(422).json({ errors });
     }
 
     try {
-        // Attempt to find a user by the provided email
-        const user = await User.findOne({ email });
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
 
-        if (!user) {
-            // If user is not found, return unauthorized
-            return res.status(401).json({ message: "Invalid credentials." });
-        }
+        user.country = country;
+        user.dateOfBirth = new Date(dateOfBirth);
+        user.phoneNumber = phoneNumber;
+        user.pin = pin;
+        user.status = 'active';
 
-        // Check if the user's account is active
-        if (user.status !== "active") {
-            return res.status(403).json({ 
-                message: "Access denied. Only users with 'active' status can log in." 
-            });
-        }
-
-        // Compare the provided password with the stored hashed password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            // If password doesn't match, return unauthorized
-            return res.status(401).json({ message: "Invalid credentials." });
-        }
-
-        // Generate a 6-digit verification code for 2FA
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // Save the code and set its expiration time (valid for 5 minutes)
-        user.twoFACode = code;
-        user.twoFAExpires = new Date(Date.now() + 5 * 60000); // 5 minutes from now
         await user.save();
 
-        // Send the verification code via SMS
-        await sendVerificationCode(user.phoneNumber, code);
+        const userResponse = user.toObject();
+        delete userResponse.password;
 
-        // Respond with a success message and the user's ID
-        return res.status(200).json({
-            message: '2FA code sent, please enter it.',
-            userId: user._id
-        });
-
+        return res.status(200).json({ message: 'Profile updated successfully', user: userResponse });
     } catch (error) {
-        // Log and respond with a server error if something goes wrong
-        console.error("Login error:", error);
-        return res.status(500).json({ message: "Internal server error." });
+        console.error("Error updating profile:", error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 
 
@@ -206,7 +332,9 @@ const verify2FACode = async (req, res) => {
 module.exports = {
     userPost,
     userLogin,
+    updateUserProfile,
+    googleLogin,
     verifyAccount,
     verify2FACode,
-    validateUserPin
+    validateUserPin,
 };
